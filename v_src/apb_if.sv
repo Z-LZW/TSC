@@ -35,6 +35,12 @@ interface apb_interface#(AW=6,DW=32)(input pclk,preset_n);
   endclocking
   
 //TBD assertions
+  property not_unknown(signal,dsbl);
+    @(posedge pclk) disable iff (dsbl)
+      !$isunknown(signal);
+  endproperty
+
+  
 
 endinterface
 
