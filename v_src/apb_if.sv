@@ -13,14 +13,14 @@ interface apb_interface#(AW=6,DW=32)(input pclk,preset_n);
   logic          pslverr;
 
   clocking cb @(posedge pclk);
-    input  psel   ;
-    input  penable;
-    input  paddr  ;
-    input  pwrite ;
-    input  pwdata ;
-    output prdata ;
-    output pready ;
-    output pslverr;
+    output  psel   ;
+    output  penable;
+    output  paddr  ;
+    output  pwrite ;
+    output  pwdata ;
+    input   prdata ;
+    input   pready ;
+    input   pslverr;
   endclocking
 
   clocking mcb @(posedge pclk);
