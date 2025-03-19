@@ -25,7 +25,7 @@ interface irq_if(input clk, input rst_n);
 
   property fall(signal,condition);
     @(posedge clk) disable iff(~rst_n)
-      condition |=> $fall(signal)
+      condition |=> $fell(signal)
   endproperty
 
   property active_together(signal,condition);
