@@ -1,35 +1,35 @@
 module mem_ctrl_tb;
 
-  reg          clk        , //system clock
-  reg          rst_n      , //async reset active lowreg
+  reg          clk        ; //system clock
+  reg          rst_n      ; //async reset active lowreg
 
-  reg[16-1:0]  op1_ba     , //base address of operrand one
-  reg[16-1:0]  op2_ba     , //base address of operrand two
-  reg[16-1:0]  ba_rez     , //base address of the resultreg
+  reg[16-1:0]  op1_ba     ; //base address of operrand one
+  reg[16-1:0]  op2_ba     ; //base address of operrand two
+  reg[16-1:0]  ba_rez     ; //base address of the resultreg
 
-  reg[ 4-1:0]  no_op      , //number of operations to be executed
-  reg[ 4-1:0]  op_type    ,
+  reg[ 4-1:0]  no_op      ; //number of operations to be executed
+  reg[ 4-1:0]  op_type    ;
 
-  reg          start      , //star initiated by cpu
-  reg          sw_reset   , //reset initiated by cpureg
+  reg          start      ; //star initiated by cpu
+  reg          sw_reset   ; //reset initiated by cpureg
 
-  wire          busy       , //operations in progress
-  wire          op_cnt     , //number of operations executedreg
+  wire          busy       ; //operations in progress
+  wire          op_cnt     ; //number of operations executedreg
 
-  wire          op_done    , //operations done executing
-  wire          address_ovf, //address reached max value and operations are not done
-  wire          address_ovr, //address overriden while incrementingreg
+  wire          op_done    ; //operations done executing
+  wire          address_ovf; //address reached max value and operations are not done
+  wire          address_ovr; //address overriden while incrementingreg
 
-  wire[ 8-1:0]  op1        , //operand one
-  wire[ 8-1:0]  op2        , //operand two
-  reg [ 8-1:0]  rez        , //rezult
-  wire          start_alu  , //start alu operation
-  reg           done_alu   , //alu done executing operationreg
+  wire[ 8-1:0]  op1        ; //operand one
+  wire[ 8-1:0]  op2        ; //operand two
+  reg [ 8-1:0]  rez        ; //rezult
+  wire          start_alu  ; //start alu operation
+  reg           done_alu   ; //alu done executing operationreg
 
-  wire           ce         , //memory chip enable
-  wire           we         , //memory write enable
-  wire           addr       , //address`
-  wire [ 8-1:0]  wdata      , //write data
+  wire           ce         ; //memory chip enable
+  wire           we         ; //memory write enable
+  wire           addr       ; //address`
+  wire [ 8-1:0]  wdata      ; //write data
   reg  [ 8-1:0]  rdata        //read data
 
 
