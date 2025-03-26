@@ -17,6 +17,9 @@ output             start_div,
 input              done_div ,
 );
 
+wire [8-1:0] rez_mul;
+wire [8-1:0] rez_div;
+
 always @(posedge clk or negedge rst_n)
 if (~rst_n) rez <= 0; else
 case(op_code)
@@ -52,7 +55,7 @@ multiplier i_multiplier(
 .rst_n (rst_n    ),
 .op1   (op0      ),
 .op2   (op1      ),
-.rez   (rez      ),
+.rez   (rez_mul  ),
 .start (start_mul),
 .done  (done_mul ),
 );
@@ -62,7 +65,7 @@ divider i_divider(
 .rst_n (rst_n    ),
 .op1   (op0      ),
 .op2   (op1      ),
-.cat   (rez      ),
+.cat   (rez_div  ),
 .start (start_div),
 .done  (done_div ),
 );
