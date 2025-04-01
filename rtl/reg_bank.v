@@ -32,9 +32,7 @@ wire error_rsp  ;
 
 assign apb_active  =  psel & penable & pready;
 
-assign error_rsp   = (psel & (paddr > 6'h20 | paddr[1:0] ));
-                     
-assign reset_ready = ()
+assign error_rsp   = (psel & (paddr > 6'h20 | (|paddr[1:0])));
 
 //-----------------------------WRRITING IN REGISTERS----------------------------//
 
@@ -96,8 +94,9 @@ if (psel & ~pwrite)
 
 //managing the rady signal
 always @(posedge pclk or negedge preset_n)
-if (~preset_n)  pready <= 1          ; else
-                pready <= ~apb_active;
+if (~preset_n)  pready <= 0          ; else
+if (apb_active) pready <= 0          ; else
+                pready <= psel       ;
 
 //manage slave error
 always @(posedge pclk or negedge preset_n)
