@@ -32,7 +32,10 @@ wire error_rsp  ;
 
 assign apb_active  =  psel & penable & pready;
 
-assign error_rsp   = (psel & (paddr > 6'h20 | (|paddr[1:0])));
+assign error_rsp   =  psel                                      & 
+                    ((paddr > 6'h20 | (|paddr[1:0]))            | 
+                     (pwrite & (paddr == 'h18 | paddr == 'h1c)) | 
+                     (~pwrite & (paddr == 'h10)))               ;
 
 //-----------------------------WRRITING IN REGISTERS----------------------------//
 
