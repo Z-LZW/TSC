@@ -61,8 +61,9 @@ if (~rst_n) current_state <= IDLE      ; else
             current_state <= next_state;
             
 always @(posedge clk or negedge rst_n)
-if (~rst_n) op_done <= 0; else
-            op_done <= (current_state == WRITE) & (op_cnt == no_op - 1);
+if (~rst_n)                                           op_done <= 0; else
+if (sw_reset)                                         op_done <= 0; else
+if ((current_state == WRITE) & (op_cnt == no_op - 1)) op_done <= 1;
 
 always @(*) begin
 if (sw_reset | address_ovf | address_ovr) next_state <= IDLE; else
@@ -114,14 +115,14 @@ if (op_done) busy <= 0;
 
 always @(posedge clk or negedge rst_n)
 if (~rst_n)                  address_ovf <= 0            ; else
-if (start)                   address_ovf <= 0            ; else
+if (sw_reset)                address_ovf <= 0            ; else
 if (current_state == READ_0) address_ovf <= addr < op1_ba; else
 if (current_state == READ_1) address_ovf <= addr < op2_ba; else
 if (current_state == WRITE ) address_ovf <= addr < ba_rez;
 
 always @(posedge clk or negedge rst_n)
 if (~rst_n)                 address_ovr <= 0; else
-if (start)                  address_ovr <= 0; else
+if (sw_reset)               address_ovr <= 0; else
 if (current_state == WRITE) address_ovr <= ((addr > op1_ba & addr < op1_ba+op_cnt) | (addr > op2_ba & addr < op2_ba+op_cnt));
 
 always @(posedge clk or negedge rst_n)

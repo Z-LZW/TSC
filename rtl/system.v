@@ -17,8 +17,7 @@ module system(
   output [ 8-1:0]  wdata  ,
   input  [ 8-1:0]  rdata  ,
 
-  output           irq    ,
-  input            ira     
+  output           irq    
 );
 
 wire [16-1:0] op1_ba  ;
@@ -28,18 +27,18 @@ wire [ 4-1:0] no_op   ;
 wire [ 4-1:0] op_code ;
 wire [ 3-1:0] ctrl    ;
 wire [ 5-1:0] status  ;
-wire [ 3-1:0] irq     ;
+wire [ 3-1:0] irq_reg ;
 wire [ 3-1:0] irq_mask;
 
-wire [8-1:0] op0      ;
 wire [8-1:0] op1      ;
+wire [8-1:0] op2      ;
 wire [8-1:0] rez      ;
 wire         start_alu;
 wire         done_alu ;
 
 reg_bank i_reg_bank(
-.clk     (clk    ),
-.rst_n   (rst_n  ),
+.pclk     (clk    ),
+.preset_n (rst_n  ),
 
 .psel    (psel   ),
 .penable (penable),
@@ -57,21 +56,20 @@ reg_bank i_reg_bank(
 .op_code (op_code ),
 .ctrl    (ctrl    ),
 .status  (status  ),
-.irq     (irq     ),
+.irq     (irq_reg ),
 .irq_mask(irq_mask)
 );
 
 irq_handler i_irq_handler(
 .clk             (clk        ),
 .rst_n           (rst_n      ),
-.address_ovf     (irq[1]     ),
-.address_ovr     (irq[2]     ),
-.op_done         (irq[0]     ),
+.address_ovf     (irq_reg[1] ),
+.address_ovr     (irq_reg[2] ),
+.op_done         (irq_reg[0] ),
 .address_ovf_mask(irq_mask[1]),
 .address_ovr_mask(irq_mask[2]),
 .op_done_mask    (irq_mask[0]),
-.irq             (irq        ),
-.ira             (ira        )
+.irq             (irq        )
 );
 
 mem_controler i_mem_controler(
@@ -88,9 +86,9 @@ mem_controler i_mem_controler(
 .sw_reset    (ctrl[1]    ),
 .busy        (status[0]  ),
 .op_cnt      (status[4:1]),
-.op_done     (irq[0]     ),
-.address_ovf (irq[1]     ),
-.address_ovr (irq[2]     ),
+.op_done     (irq_reg[0] ),
+.address_ovf (irq_reg[1] ),
+.address_ovr (irq_reg[2] ),
 
 .op1         (op1        ),
 .op2         (op2        ),
@@ -110,8 +108,8 @@ alu i_alu(
 .rst_n     (rst_n    ),
 
 .op_code   (op_code  ),
-.op0       (op0      ),
-.op1       (op1      ),
+.op0       (op1      ),
+.op1       (op2      ),
 .rez       (rez      ),
 .start_alu (start_alu),
 .done_alu  (done_alu ),

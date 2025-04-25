@@ -73,7 +73,7 @@ if (apb_active & pwrite & paddr == 6'h14) ctrl <= pwdata[2:0];
 //interrupt mask
 always @(posedge pclk or negedge preset_n)
 if (~preset_n)                            irq_mask <= 3'h0       ; else
-if (apb_active & pwrite & paddr == 6'h18) irq_mask <= pwdata[2:0];
+if (apb_active & pwrite & paddr == 6'h20) irq_mask <= pwdata[2:0];
 
 
 //-----------------------------READING FROM REGISTERS----------------------------//

@@ -14,7 +14,7 @@ output             start_mul,
 input              done_mul ,
 
 output             start_div,
-input              done_div ,
+input              done_div 
 );
 
 wire [8-1:0] rez_mul;
@@ -32,9 +32,9 @@ case(op_code)
   'h6 : rez <=  (op0  | op1)                     ;
   'h7 : rez <=  (op0  ^ op1)                     ;
   'h8 : rez <= ~(op0       )                     ;
-  'h9 : rez <=  (op0 ~& op1)                     ;
-  'ha : rez <=  (op0 ~| op1)                     ;
-  'hb : rez <=  (op0 ~^ op1)                     ;
+  'h9 : rez <= ~(op0  & op1)                     ;
+  'ha : rez <= ~(op0  | op1)                     ;
+  'hb : rez <= ~(op0  ^ op1)                     ;
   'hc : rez <=  (op0 << op1)                     ;
   'hd : rez <=  (op0 >> op1)                     ;
   'he : rez <=  (op0 << op1) + ((1   << op1) - 1);
@@ -57,7 +57,7 @@ multiplier i_multiplier(
 .op2   (op1      ),
 .rez   (rez_mul  ),
 .start (start_mul),
-.done  (done_mul ),
+.done  (done_mul )
 );
 
 divider i_divider(
@@ -67,7 +67,7 @@ divider i_divider(
 .op2   (op1      ),
 .cat   (rez_div  ),
 .start (start_div),
-.done  (done_div ),
+.done  (done_div )
 );
 
 endmodule

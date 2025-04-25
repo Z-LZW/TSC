@@ -28,7 +28,7 @@ if (~|counter) idle <= 1;
 
 always @(posedge clk or negedge rst_n)
 if (~rst_n) counter <= 7          ; else
-if (~idle)  counter <= counter - 1; else
+if (~idle)  counter <= counter - 1;
 
 always @(posedge clk or negedge rst_n)
 if (~rst_n) done <= 0        ; else
