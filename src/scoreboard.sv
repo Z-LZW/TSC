@@ -12,6 +12,12 @@ class scoreboard;
   mem_trans mem_t;
   irq_trans irq_t;
 
+  bit irq_asserted;
+
+  event apb_e;
+  event mem_e;
+  event irq_e;
+
   //registers
   bit [32-1:0] ba_op1  ;
   bit [32-1:0] ba_op2  ;
@@ -74,7 +80,7 @@ class scoreboard;
           'h1c: reg_cmp = predict_val;
           'h20: reg_cmp = irq_mask   ; 
         endcase
-
+        ->apb_e;
         if (apb_t.data != reg_cmp) begin $error("DATA MISMATCH ON REGISTERS: ADDR:%2h | ACTUAL: %4h | EXPECTED: %4h",apb_t.addr,apb_t.data,reg_cmp); error_counter++; end
       end
     end
@@ -86,15 +92,18 @@ class scoreboard;
         @(ctrl_register_e);
         forever begin
           mem_2_scb.get(mem_t);
+          ->mem_e;
           bsy_cmp = 1;
           if (mem_t.kind != MEM_READ) begin $error("EXPECTED A READ FROM MEMORY AND RECEIVED A WRITE"); error_counter++; end
           op1 = mem_t.data; 
 
           mem_2_scb.get(mem_t);
+          ->mem_e
           if (mem_t.kind != MEM_READ) begin $error("EXPECTED A READ FROM MEMORY AND RECEIVED A WRITE"); error_counter++; end
           op2 = mem_t.data;   
 
           mem_2_scb.get(mem_t);
+          ->mem_e;
           if (mem_t.kind == MEM_READ) begin $error("EXPECTED A WRITE FROM MEMORY AND RECEIVED A READ"); error_counter++; end 
 
           case(op_code)
@@ -128,6 +137,8 @@ class scoreboard;
   task check_irq();
     forever begin
       iqr_2_scb.get(irq_t);
+      ->irq_e;
+      irq_asserted = 1;
       bsy_cmp = 0;
       if (irq_mask == 0) begin $error("INTERRUP ASSERTED WHILE IT WAS MASKED"); error_counter++; end
     end
@@ -135,8 +146,67 @@ class scoreboard;
 
   task clear();
     op_cnt = 0;
+    irq_asserted = 0;
     ->ctrl_register_e;
   endtask
+
+  //-----------------------------------------coverage-------------------------------------
+
+  covergroup functional_coverage @(apb_e);
+    op1_ba_cov: coverpoint ba_op1 {
+      bins range[10] = {[0:16'hffff]};
+    }
+
+    op2_ba_cov: coverpoint ba_op2 {
+      bins range[10] = {[0:16'hffff]};
+    }
+
+    rez_ba_cov: coverpoint ba_rez {
+      bins range[10] = {[0:16'hffff]};
+    }
+
+    no_op_cov: coverpoint no_op {
+      bins value[16] = {[0:15]}
+    }
+
+    op_code_cov: coverpoint op_code {
+      bins value[16] = {[0:15]}
+    }
+
+    ctrl_cov: coverpoint ctrl{
+      bins start = {0};
+      bins sw_reset = {1};
+    }
+
+    bsy_cov: coverpoint status[0]{
+      bins busy = {1};
+      bins idle = {0};
+    }
+
+    op_cnt_cov: coverpoint status[4:1]{
+      bins range[4] = {[0:16]}
+    }
+
+    irq_cov: coverpoint irq{
+      wildcard bins op_done = {??1};
+      wildcard bins address_ovf = {?1?};
+      wildcard bins address_ovr = {1??};
+    }
+
+    irq_mask_cov: coverpoint irq_mask{
+      bins all_masked      = {0};
+      bins all_visible     = {7};
+      bins combinations[6] = {[1:6]};
+    }
+
+    no_op_x_op_code_cross: cross no_op_cov,op_code_cov;
+
+    op_code_x_bsy_cross: cross op_code_cov,bsy_cov;
+
+    op_done_x_irq:  cross irq[0],irq_asserted;
+    addr_ovf_x_irq: cross irq[1],irq_asserted;
+    addr_ovr_x_irq: cross irq[2],irq_asserted;
+  endgroup
 
 endclass
 
