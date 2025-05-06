@@ -20,6 +20,7 @@ input              done_div
 wire [8-1:0] rez_mul;
 wire [8-1:0] rez_div;
 
+//operation handler
 always @(posedge clk or negedge rst_n)
 if (~rst_n) rez <= 0; else
 case(op_code)
@@ -41,6 +42,7 @@ case(op_code)
   'hf : rez <=  (op0 << op1) + (('hf << op1)    );
 endcase
 
+//done alu management
 always @(posedge clk or negedge rst_n)
 if (~rst_n)       done_alu <= 0        ; else
 if (op_code == 2) done_alu <= done_mul ; else
@@ -50,6 +52,7 @@ if (op_code == 3) done_alu <= done_div ; else
 assign start_mul = (op_code == 2) ? start_alu : 0;
 assign start_div = (op_code == 3) ? start_alu : 0;
 
+//sequential multiplier algorithm
 multiplier i_multiplier(
 .clk   (clk      ),
 .rst_n (rst_n    ),
@@ -60,6 +63,7 @@ multiplier i_multiplier(
 .done  (done_mul )
 );
 
+//sequential division algorithm
 divider i_divider(
 .clk   (clk      ),
 .rst_n (rst_n    ),

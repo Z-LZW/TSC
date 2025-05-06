@@ -51,11 +51,11 @@ localparam WRITE  = 'd4;
 reg [3-1:0] prev_state    ;
 reg [3-1:0] current_state ; 
 reg [3-1:0] next_state    ; 
-reg [8-1:0] op_ct         ;
 wire        single_operand;
 
 assign single_operand = (op_type == 4'h4) || (op_type == 4'h8);
 
+//FSM for memory control management
 always @(posedge clk or negedge rst_n)
 if (~rst_n) current_state <= IDLE      ; else
             current_state <= next_state;
@@ -77,10 +77,10 @@ case (current_state)
 endcase
 end
 
-//assign ce = ^current_state  & ~(current_state == WRITE & (addr < ba_rez)) & ~((addr > op1_ba & addr < op1_ba+op_cnt) | (addr > op2_ba & addr < op2_ba+op_cnt));
 assign ce = ^current_state;
 assign we = current_state[2];
 
+//address handler
 always @(*)
 case (current_state)
   READ_0:  addr <= op1_ba + op_cnt;
@@ -91,28 +91,34 @@ endcase
 
 assign wdata = rez;
 
+//count the operations done
 always @(posedge clk or negedge rst_n)
 if (~rst_n)           op_cnt <= 0         ; else
 if (start)            op_cnt <= 0         ; else
 if (current_state[2]) op_cnt <= op_cnt + 1;
 
+//prev fsm state
 always @(posedge clk or negedge rst_n)
 if (~rst_n) prev_state <= 0            ; else
             prev_state <= current_state;
 
+//get op1 from memory
 always @(posedge clk or negedge rst_n)
 if (~rst_n)               op1 <= 0    ; else
 if (prev_state == READ_0) op1 <= rdata;
 
+//get op2 from memory
 always @(posedge clk or negedge rst_n)
 if (~rst_n)               op2 <= 0    ; else
 if (prev_state == READ_1) op2 <= rdata;
 
+//manage busy signal
 always @(posedge clk or negedge rst_n)
 if (~rst_n)  busy <= 0; else
 if (start)   busy <= 1; else
 if (op_done) busy <= 0;
 
+//address ovf irq
 always @(posedge clk or negedge rst_n)
 if (~rst_n)                  address_ovf <= 0            ; else
 if (sw_reset)                address_ovf <= 0            ; else
@@ -120,11 +126,13 @@ if (current_state == READ_0) address_ovf <= addr < op1_ba; else
 if (current_state == READ_1) address_ovf <= addr < op2_ba; else
 if (current_state == WRITE ) address_ovf <= addr < ba_rez;
 
+//address over irq
 always @(posedge clk or negedge rst_n)
 if (~rst_n)                 address_ovr <= 0; else
 if (sw_reset)               address_ovr <= 0; else
 if (current_state == WRITE) address_ovr <= ((addr > op1_ba & addr < op1_ba+op_cnt) | (addr > op2_ba & addr < op2_ba+op_cnt));
 
+//start ALU
 always @(posedge clk or negedge rst_n)
 if (~rst_n) start_alu  <= 0                                             ; else
             start_alu  <= (current_state == START & prev_state != START);

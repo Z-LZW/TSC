@@ -14,8 +14,6 @@ input      op_done_mask    ,
 output     irq             
 );
 
-
-
 assign irq = (address_ovf & address_ovf_mask) | 
              (address_ovr & address_ovr_mask) | 
              (op_done     & op_done_mask    ) ;
