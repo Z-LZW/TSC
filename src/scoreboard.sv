@@ -4,16 +4,19 @@
 class scoreboard;
 
   //mailboxes
-  mailbox apb_2_scb;
-  mailbox iqr_2_scb;
-  mailbox mem_2_scb;
+  mailbox apb_2_scb; //get trans from apb
+  mailbox iqr_2_scb; //get trans from irq
+  mailbox mem_2_scb; //get trans from mem
 
+  //transactions
   apb_trans apb_t;
   mem_trans mem_t;
   irq_trans irq_t;
 
+  //irq model
   bit irq_asserted;
 
+  //events for coverage sampling
   event apb_e;
   event mem_e;
   event irq_e;
@@ -36,9 +39,9 @@ class scoreboard;
   bit [ 8-1:0] op2;
   bit [ 8-1:0] rez;
 
-  int error_counter;
-  int op_cnt;
-  bit bsy_cmp;
+  int error_counter; //counts the number of errors
+  int op_cnt; //predictor for number of ops done
+  bit bsy_cmp; //predictor for busy
 
   function new();
     error_counter = 0;
@@ -54,9 +57,9 @@ class scoreboard;
 
   task check_apb();
     forever begin
-      apb_2_scb.get(apb_t);
+      apb_2_scb.get(apb_t); //get trans from apb
       if (apb_t.kind == APB_WRITE) begin
-        case (apb_t.addr)
+        case (apb_t.addr)               //update the register model on writing
           'h0 : ba_op1   = apb_t.data;
           'h4 : ba_op2   = apb_t.data;
           'h8 : ba_rez   = apb_t.data;
@@ -69,7 +72,7 @@ class scoreboard;
         endcase
       end
       else begin
-        case (apb_t.addr)
+        case (apb_t.addr)                 //compare the register model and dut register on read
           'h0 : reg_cmp = ba_op1     ;
           'h4 : reg_cmp = ba_op2     ;
           'h8 : reg_cmp = ba_rez     ;
@@ -89,11 +92,11 @@ class scoreboard;
   task check_mem();
     forever begin
       fork
-        @(ctrl_register_e);
+        @(ctrl_register_e); //wait start
         forever begin
-          mem_2_scb.get(mem_t);
+          mem_2_scb.get(mem_t); //get memory trans
           ->mem_e;
-          bsy_cmp = 1;
+          bsy_cmp = 1; //predict busy
           if (mem_t.kind != MEM_READ) begin $error("EXPECTED A READ FROM MEMORY AND RECEIVED A WRITE"); error_counter++; end
           op1 = mem_t.data; 
 
@@ -106,7 +109,7 @@ class scoreboard;
           ->mem_e;
           if (mem_t.kind == MEM_READ) begin $error("EXPECTED A WRITE FROM MEMORY AND RECEIVED A READ"); error_counter++; end 
 
-          case(op_code)
+          case(op_code) //predict the result of the operation based on op code
                 0 : rez_cmp = op1  + op2;
                 1 : rez_cmp = op1  - op2;
                 2 : rez_cmp = op1  * op2;
@@ -136,7 +139,7 @@ class scoreboard;
 
   task check_irq();
     forever begin
-      iqr_2_scb.get(irq_t);
+      iqr_2_scb.get(irq_t); //get irq trans
       ->irq_e;
       irq_asserted = 1;
       bsy_cmp = 0;
@@ -144,7 +147,7 @@ class scoreboard;
     end
   endtask
 
-  task clear();
+  task clear(); //clear status predictors
     op_cnt = 0;
     irq_asserted = 0;
     ->ctrl_register_e;
